@@ -27,12 +27,10 @@ const sendConnectionRequest = (leadUrl) => __awaiter(void 0, void 0, void 0, fun
             },
         });
         const result = response.data;
-        // Store in DB
         yield lead_models_1.default.create({
             leadUrl,
             status: result.status || "pending",
         });
-        // Check response and return status
         if (result.status === "already_connected")
             return "already_connected";
         if (result.status === "invalid_url")

@@ -1,15 +1,9 @@
 import { Router } from "express";
-import {
-  authenticateAccountController, 
-  checkSyncStatusController,
-} from "../controllers/accountController";
+import { authenticateAccountController } from "../controllers/accountController";
 
-const accountRouter = Router();
+const router = Router();
 
-//@ts-ignore
-accountRouter.post("/authenticate", authenticateAccountController);
+// @ts-ignore
+router.post("/authenticate", authenticateAccountController);
 
-//@ts-ignore
-accountRouter.get("/:accountId/sync-status", checkSyncStatusController);
-
-export default accountRouter;
+export default router;

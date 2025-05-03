@@ -11,14 +11,21 @@ export async function checkAccountSyncStatus(accountId: string): Promise<"valid"
       }
     );
 
-    const accountStatus = response.data.status;
+    console.log("🔵 Unipile Response:", response.data);
+
+    const accountStatus = response.data?.status; // adjust based on actual response shape
 
     if (accountStatus === "connected") return "valid";
     if (accountStatus === "expired") return "expired";
 
     return "re-auth-required";
   } catch (error: any) {
-    console.error("🔴 Sync check failed:", error?.response?.data || error.message);
+    if (error.response) {
+      console.error("🔴 API Error Response:", error.response.data);
+      console.error("🔴 Status:", error.response.status);
+    } else {
+      console.error("🔴 Error Message:", error.message);
+    }
     return "re-auth-required";
   }
 }

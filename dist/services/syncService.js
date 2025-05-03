@@ -23,7 +23,8 @@ function checkAccountSyncStatus(accountId) {
                     Authorization: `Bearer ${process.env.UNIPILE_API_KEY}`,
                 },
             });
-            const accountStatus = response.data.status;
+            console.log("🔵 Unipile Response:", response.data);
+            const accountStatus = (_a = response.data) === null || _a === void 0 ? void 0 : _a.status; // adjust based on actual response shape
             if (accountStatus === "connected")
                 return "valid";
             if (accountStatus === "expired")
@@ -31,7 +32,13 @@ function checkAccountSyncStatus(accountId) {
             return "re-auth-required";
         }
         catch (error) {
-            console.error("🔴 Sync check failed:", ((_a = error === null || error === void 0 ? void 0 : error.response) === null || _a === void 0 ? void 0 : _a.data) || error.message);
+            if (error.response) {
+                console.error("🔴 API Error Response:", error.response.data);
+                console.error("🔴 Status:", error.response.status);
+            }
+            else {
+                console.error("🔴 Error Message:", error.message);
+            }
             return "re-auth-required";
         }
     });

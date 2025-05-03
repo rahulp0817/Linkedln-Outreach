@@ -20,13 +20,11 @@ export const sendConnectionRequest = async (leadUrl: string): Promise<RequestSta
 
     const result = response.data;
 
-    // Store in DB
     await Lead.create({
       leadUrl,
       status: result.status || "pending", 
     });
 
-    // Check response and return status
     if (result.status === "already_connected") return "already_connected";
     if (result.status === "invalid_url") return "invalid_url";
     if (result.status === "connected" || result.status === "pending") return "success";

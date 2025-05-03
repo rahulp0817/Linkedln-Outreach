@@ -8,23 +8,39 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkSyncStatusController = exports.authenticateAccountController = void 0;
-const authService_1 = require("../services/authService");
-const syncService_1 = require("../services/syncService");
+exports.authenticateAccountController = void 0;
+const axios_1 = __importDefault(require("axios"));
 const authenticateAccountController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { cookies } = req.body;
-    if (!cookies)
-        return res.status(400).json({ message: "Cookies are required" });
-    const status = yield (0, authService_1.authenticateAccount)(cookies);
-    return res.status(200).json({ status });
+    try {
+        const { cookies } = req.body;
+        if (!cookies) {
+            return res.status(400).json({ message: "Cookies are required" });
+        }
+        const response = yield axios_1.default.get("https://www.linkedin.com/feed/", {
+            headers: {
+                Cookie: cookies,
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+            },
+            maxRedirects: 0,
+            validateStatus: (status) => status < 400,
+        });
+        if (response.data.includes("feed") && !response.data.includes("signin")) {
+            return res.status(200).json({ status: "success", message: "Authenticated successfully" });
+        }
+        return res.status(401).json({ status: "failure", message: "Invalid LinkedIn cookies" });
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            console.error("LinkedIn authentication error:", error.message);
+        }
+        else {
+            console.error("LinkedIn authentication error:", error);
+        }
+        return res.status(500).json({ status: "error", message: "Internal server error" });
+    }
 });
 exports.authenticateAccountController = authenticateAccountController;
-const checkSyncStatusController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { accountId } = req.params;
-    if (!accountId)
-        return res.status(400).json({ message: "Account ID is required" });
-    const status = yield (0, syncService_1.checkAccountSyncStatus)(accountId);
-    return res.status(200).json({ status });
-});
-exports.checkSyncStatusController = checkSyncStatusController;

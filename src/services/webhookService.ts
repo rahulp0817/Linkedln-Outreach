@@ -3,8 +3,6 @@ import Lead from "../models/lead-models";
 export const handleConnectionWebhook = async (data: any): Promise<void> => {
   try {
     const { event, profile_url, status } = data;
-
-
     console.log(`🔔 Webhook received: Event = ${event}, URL = ${profile_url}`);
 
     if (event === "connection_accepted") {

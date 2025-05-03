@@ -6,5 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const webhookController_1 = require("../controllers/webhookController");
 const router = express_1.default.Router();
+// @ts-ignore
 router.post("/", webhookController_1.handleWebhookController);
 exports.default = router;
