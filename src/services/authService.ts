@@ -3,7 +3,7 @@ import axios from "axios";
 export async function authenticateAccount(cookies: string): Promise<"success" | "failure" | "expired"> {
   try {
     const response = await axios.post(
-      "https://api.unipile.com/v1/accounts/connect",
+      "https://api11.unipile.com:14172/v1/accounts/connect",
       {
         provider: "linkedin",
         data: {

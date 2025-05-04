@@ -3,33 +3,42 @@ import axios from "axios";
 
 export const authenticateAccountController = async (req: Request, res: Response) => {
   try {
-    const { cookies } = req.body;
-    if (!cookies) {
+    let { cookies } = req.body;
+
+    if (!cookies || typeof cookies !== "string") {
       return res.status(400).json({ message: "Cookies are required" });
     }
 
+    const jsessionMatch = cookies.match(/JSESSIONID=([^;]+)/);
+    if (jsessionMatch) {
+      const jsessionValue = jsessionMatch[1].replace(/^"|"$/g, "");
+      cookies = cookies.replace(/JSESSIONID=([^;]+)/, `JSESSIONID="${jsessionValue}"`);
+    } else {
+      return res.status(400).json({ message: "JSESSIONID (csrf-token) not found in cookies" });
+    }
+
+    const headers = {
+      Cookie: cookies,
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+      Accept: "application/json",
+      "csrf-token": jsessionMatch[1],
+      "x-restli-protocol-version": "2.0.0",
+    };
+
     const feedResponse = await axios.get("https://www.linkedin.com/feed/", {
-      headers: {
-        Cookie: cookies,
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-      },
+      headers,
       maxRedirects: 0,
       validateStatus: (status) => status < 400,
     });
 
-    const isValid = feedResponse.data.includes("feed") && !feedResponse.data.includes("signin");
-    if (!isValid) {
+    const isLoggedIn = feedResponse.data.includes("feed") && !feedResponse.data.includes("signin");
+    if (!isLoggedIn) {
       return res.status(401).json({ status: "failure", message: "Invalid LinkedIn cookies" });
     }
 
     const meResponse = await axios.get("https://www.linkedin.com/voyager/api/me", {
-      headers: {
-        Cookie: cookies,
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-        "Accept": "application/json",
-      },
+      headers,
     });
 
     const accountId = meResponse.data?.miniProfile?.publicIdentifier || meResponse.data?.id;

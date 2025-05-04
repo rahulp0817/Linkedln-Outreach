@@ -18,7 +18,7 @@ function authenticateAccount(cookies) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c;
         try {
-            const response = yield axios_1.default.post("https://api.unipile.com/v1/accounts/connect", {
+            const response = yield axios_1.default.post("https://api11.unipile.com:14172/v1/accounts/connect", {
                 provider: "linkedin",
                 data: {
                     cookies,
