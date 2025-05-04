@@ -24,7 +24,7 @@ function checkAccountSyncStatus(accountId) {
                 },
             });
             console.log("🔵 Unipile Response:", response.data);
-            const accountStatus = (_a = response.data) === null || _a === void 0 ? void 0 : _a.status; // adjust based on actual response shape
+            const accountStatus = (_a = response.data) === null || _a === void 0 ? void 0 : _a.status;
             if (accountStatus === "connected")
                 return "valid";
             if (accountStatus === "expired")

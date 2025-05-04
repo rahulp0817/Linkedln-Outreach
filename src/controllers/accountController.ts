@@ -8,7 +8,7 @@ export const authenticateAccountController = async (req: Request, res: Response)
       return res.status(400).json({ message: "Cookies are required" });
     }
 
-    const response = await axios.get("https://www.linkedin.com/feed/", {
+    const feedResponse = await axios.get("https://www.linkedin.com/feed/", {
       headers: {
         Cookie: cookies,
         "User-Agent":
@@ -18,17 +18,29 @@ export const authenticateAccountController = async (req: Request, res: Response)
       validateStatus: (status) => status < 400,
     });
 
-    if (response.data.includes("feed") && !response.data.includes("signin")) {
-      return res.status(200).json({ status: "success", message: "Authenticated successfully" });
+    const isValid = feedResponse.data.includes("feed") && !feedResponse.data.includes("signin");
+    if (!isValid) {
+      return res.status(401).json({ status: "failure", message: "Invalid LinkedIn cookies" });
     }
 
-    return res.status(401).json({ status: "failure", message: "Invalid LinkedIn cookies" });
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error("LinkedIn authentication error:", error.message);
-    } else {
-      console.error("LinkedIn authentication error:", error);
-    }
+    const meResponse = await axios.get("https://www.linkedin.com/voyager/api/me", {
+      headers: {
+        Cookie: cookies,
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+        "Accept": "application/json",
+      },
+    });
+
+    const accountId = meResponse.data?.miniProfile?.publicIdentifier || meResponse.data?.id;
+
+    return res.status(200).json({
+      status: "success",
+      message: "Authenticated successfully",
+      accountId,
+    });
+  } catch (error: any) {
+    console.error("LinkedIn authentication error:", error?.response?.data || error.message);
     return res.status(500).json({ status: "error", message: "Internal server error" });
   }
 };

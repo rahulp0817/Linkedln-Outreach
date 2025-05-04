@@ -14,9 +14,7 @@ const webhookService_1 = require("../services/webhookService");
 const handleWebhookController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const data = req.body;
-        // Optional: Log the received data for debugging purposes
         console.log(`Received webhook data: ${JSON.stringify(data)}`);
-        // Validate the incoming data
         const { event, profile_url, status } = data;
         if (!event || !profile_url || !status) {
             console.error("Invalid webhook payload:", data);

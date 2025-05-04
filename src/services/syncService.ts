@@ -13,7 +13,7 @@ export async function checkAccountSyncStatus(accountId: string): Promise<"valid"
 
     console.log("🔵 Unipile Response:", response.data);
 
-    const accountStatus = response.data?.status; // adjust based on actual response shape
+    const accountStatus = response.data?.status; 
 
     if (accountStatus === "connected") return "valid";
     if (accountStatus === "expired") return "expired";

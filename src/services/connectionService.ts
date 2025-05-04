@@ -1,37 +1,81 @@
-import axios from "axios";
-import Lead from "../models/lead-models";
+import axios from 'axios';
+import https from 'https';
 
-export type RequestStatus = "success" | "already_connected" | "invalid_url" | "failure";
+export interface RequestStatus {
+  success: boolean;
+  message: string;
+}
 
-export const sendConnectionRequest = async (leadUrl: string): Promise<RequestStatus> => {
+const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+
+const getProviderIdFromUrl = async (
+  leadUrl: string,
+  accountId: string
+): Promise<string> => {
   try {
-    const response = await axios.post(
-      `https://api.unipile.com/v1/connections/send`,
+    const profileHandle = leadUrl.split('linkedin.com/in/')[1]?.replace('/', '');
+    if (!profileHandle) throw new Error('Invalid LinkedIn URL format.');
+
+    const response = await axios.get(
+      `${process.env.UNIPILE_BASE_URL}/api/v1/users/${profileHandle}?account_id=${accountId}`,
       {
-        profile_url: leadUrl,
+        headers: {
+          Authorization: `Bearer ${process.env.UNIPILE_API_KEY}`,
+        },
+        httpsAgent,
+      }
+    );
+
+    if (response.data?.provider_id) {
+      return response.data.provider_id;
+    }
+
+    throw new Error('Provider ID not found.');
+  } catch (err: any) {
+    throw new Error(
+      `Failed to get provider ID: ${err.response?.data?.message || err.message}`
+    );
+  }
+};
+
+export const sendConnectionRequest = async (
+  accountId: string,
+  leadUrl: string
+): Promise<RequestStatus> => {
+  try {
+    const providerId = await getProviderIdFromUrl(leadUrl, accountId);
+
+    const response = await axios.post(
+      `${process.env.UNIPILE_BASE_URL}/api/v1/users/invite`,
+      {
+        account_id: accountId,
+        provider_id: 'linkedin',  
+        lead_url: leadUrl,  
       },
       {
         headers: {
           Authorization: `Bearer ${process.env.UNIPILE_API_KEY}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
+        httpsAgent,
       }
     );
 
-    const result = response.data;
-
-    await Lead.create({
-      leadUrl,
-      status: result.status || "pending", 
-    });
-
-    if (result.status === "already_connected") return "already_connected";
-    if (result.status === "invalid_url") return "invalid_url";
-    if (result.status === "connected" || result.status === "pending") return "success";
-
-    return "failure";
-  } catch (error: any) {
-    console.error("Send Connection Error:", error.response?.data || error.message);
-    return "failure";
+    if (response.data?.status === 'success') {
+      return {
+        success: true,
+        message: 'Connection request sent successfully.',
+      };
+    } else {
+      return {
+        success: false,
+        message: response.data?.message || 'Unipile responded with an error.',
+      };
+    }
+  } catch (err: any) {
+    return {
+      success: false,
+      message: `Error: ${err.message || 'Connection request failed.'}`,
+    };
   }
 };

@@ -4,10 +4,9 @@ import { handleConnectionWebhook } from "../services/webhookService";
 export const handleWebhookController = async (req: Request, res: Response) => {
   try {
     const data = req.body;
-    // Optional: Log the received data for debugging purposes
+    
     console.log(`Received webhook data: ${JSON.stringify(data)}`);
     
-    // Validate the incoming data
     const { event, profile_url, status } = data;
     if (!event || !profile_url || !status) {
       console.error("Invalid webhook payload:", data);

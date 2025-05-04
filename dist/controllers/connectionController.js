@@ -9,18 +9,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authenticate = exports.sendConnection = void 0;
+exports.handleSendConnectionRequest = void 0;
 const connectionService_1 = require("../services/connectionService");
-const authService_1 = require("../services/authService");
-const sendConnection = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { leadUrl } = req.body;
-    const result = yield (0, connectionService_1.sendConnectionRequest)(leadUrl);
-    res.status(200).json({ message: "Connection sent", result });
+const handleSendConnectionRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { lead_url } = req.body;
+    const { accountId } = req.params;
+    if (!lead_url || !accountId) {
+        return res.status(400).json({ error: 'Missing leadUrl or accountId' });
+    }
+    try {
+        const result = yield (0, connectionService_1.sendConnectionRequest)(accountId, lead_url);
+        if (result.success) {
+            return res.status(200).json({ message: result.message });
+        }
+        else {
+            return res.status(400).json({ error: result.message });
+        }
+    }
+    catch (err) {
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
-exports.sendConnection = sendConnection;
-const authenticate = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const cookies = _req.headers.cookie || "";
-    yield (0, authService_1.authenticateAccount)(cookies);
-    res.status(200).json({ message: "Authenticated with LinkedIn" });
-});
-exports.authenticate = authenticate;
+exports.handleSendConnectionRequest = handleSendConnectionRequest;
